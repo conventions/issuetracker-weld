@@ -46,6 +46,7 @@
 			<lib dir="${webroot.dir}/WEB-INF/lib"></lib>
 			<fileset dir="${webroot.dir}">
 				<include name="WEB-INF/faces-config.xml"/>
+				<include name="WEB-INF/beans.xml"/>
 				<include name="META-INF/**"/>
 				<include name="resources/**"/>
 				<include name="pages/**"/>

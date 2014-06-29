@@ -7,10 +7,7 @@ import javax.inject.Named;
 import org.conventionsframework.exception.BusinessException;
 import org.conventionsframework.qualifier.PersistentClass;
 import org.conventionsframework.service.impl.BaseServiceImpl;
-import org.hibernate.Criteria;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.MatchMode;
-import org.hibernate.criterion.Restrictions;
 
 import br.com.triadworks.issuetracker.model.Usuario;
 import br.com.triadworks.issuetracker.service.UsuarioService;
@@ -35,7 +32,6 @@ public class UsuarioServiceImpl extends BaseServiceImpl<Usuario> implements Usua
 		super.store(usuario);
 	}
 
-	 
 
 	@Override
 	public void atualiza(Usuario usuario) {
@@ -50,21 +46,18 @@ public class UsuarioServiceImpl extends BaseServiceImpl<Usuario> implements Usua
 
 	@Override
 	public Usuario buscaPor(String login, String senha) {
-		return (Usuario) getCriteria().add(Restrictions.eq("login", login))
-				.add(Restrictions.eq("senha", senha)).uniqueResult();
+		return (Usuario) crud.eq("login", login)
+				.eq("senha", senha).find();
 	}
 
 	@Override
 	public boolean isUsuarioExistente(Usuario usuario) {
-		Criteria crit = getCriteria(); 
 		//usando para ignorar id do usuario que estamos editando senão o rowCount retorna o proprio usuario
-		if(usuario.getId() != null){
-			crit.add(Restrictions.ne("id", usuario.getId()));
-		}
+		crud.ne("id", usuario.getId());
 
 		if(usuario != null && !"".endsWith(usuario.getLogin())){
-			crit.add(Restrictions.ilike("login", usuario.getLogin(), MatchMode.EXACT));
-			return (crud.criteria(crit).count() > 0);
+			crud.ilike("login", usuario.getLogin(), MatchMode.EXACT);
+			return (crud.count() > 0);
  		}
 		return false;
 	}

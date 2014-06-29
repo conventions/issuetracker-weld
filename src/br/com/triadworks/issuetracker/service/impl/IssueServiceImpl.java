@@ -10,9 +10,7 @@ import org.conventionsframework.model.SearchModel;
 import org.conventionsframework.qualifier.PersistentClass;
 import org.conventionsframework.service.impl.BaseServiceImpl;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.MatchMode;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import br.com.triadworks.issuetracker.model.Comentario;
@@ -32,10 +30,9 @@ public class IssueServiceImpl extends BaseServiceImpl<Issue>
 
 	@Override
 	public List<Issue> getIssuesDoUsuario(Long id) {
-		Criteria crit = getCriteria();
-		crit.createAlias("assinadoPara", "assinadoPara");
-		crit.add(Restrictions.eq("assinadoPara.id", id));
-		return crud.criteria(crit).list();
+		crud.join("assinadoPara", "assinadoPara")
+		.eq("assinadoPara.id", id);
+		return crud.list();
 	}
 
 	@Override
@@ -85,13 +82,11 @@ public class IssueServiceImpl extends BaseServiceImpl<Issue>
 	 */
 	@Override
 	public Criteria configPagination(SearchModel<Issue> searchModel) {
-		
-		Criteria crit = getCriteria();
 		//configura paginação para o dashboard
 		Long idUsuario = (Long) searchModel.getFilter().get("uID");//parametro passado atraves do mapa de parametros {@see DashboardBean#preload()}
 		if(idUsuario != null){
-			crit.createAlias("assinadoPara", "assinadoPara");
-			crit.add(Restrictions.eq("assinadoPara.id", idUsuario));
+			crud.join("assinadoPara", "assinadoPara")
+			.eq("assinadoPara.id", idUsuario);
 		}
 		
 		
@@ -106,40 +101,40 @@ public class IssueServiceImpl extends BaseServiceImpl<Issue>
 			
 			if(id != null && !"".endsWith(id)){
 				try{
-					crit.add(Restrictions.eq("id", Long.parseLong(id)));
+					crud.eq("id", Long.parseLong(id));
 				}catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		    nomeProjeto = tableFilters.get("projeto.nome");
 			if(nomeProjeto != null){
-				crit.createAlias("projeto", "projeto");
-				crit.add(Restrictions.ilike("projeto.nome", nomeProjeto,MatchMode.ANYWHERE));
+				crud.join("projeto", "projeto");
+				crud.ilike("projeto.nome", nomeProjeto,MatchMode.ANYWHERE);
 			}
 			String sumario = tableFilters.get("sumario");
 			if(sumario != null){
-				crit.add(Restrictions.ilike("sumario", sumario,MatchMode.ANYWHERE));
+				crud.ilike("sumario", sumario,MatchMode.ANYWHERE);
 			}
 			
 			String tipo = tableFilters.get("tipo");
 			if(tipo != null){
 				if(TipoDeIssue.BUG.name().equals(tipo)){
-					crit.add(Restrictions.eq("tipo", TipoDeIssue.BUG));
+					crud.eq("tipo", TipoDeIssue.BUG);
 				}
 				else if(TipoDeIssue.FEATURE.name().equals(tipo)){
-					crit.add(Restrictions.eq("tipo", TipoDeIssue.FEATURE));
+					crud.eq("tipo", TipoDeIssue.FEATURE);
 				}
 			}
 		}
 		//cria join para ordenar por "assinadoPara"
 		String sortField = searchModel.getSortField(); 
 		if(sortField != null && sortField.equals("assinadoPara.nome") && idUsuario == null){ //se idUsuario for != null é pq o alias ja foi criado
-			crit.createAlias("assinadoPara", "assinadoPara",JoinType.LEFT_OUTER_JOIN);
+			crud.join("assinadoPara", "assinadoPara",JoinType.LEFT_OUTER_JOIN);
 		}
 		if(sortField != null && sortField.equals("projeto.nome") && nomeProjeto == null){//se nome projeto != null é pq o alias ja foi criado
-			crit.createAlias("projeto", "projeto",JoinType.LEFT_OUTER_JOIN);
+			crud.join("projeto", "projeto",JoinType.LEFT_OUTER_JOIN);
 		}
-		return crit;
+		return crud.getCriteria(true);
 	}
 
 }
